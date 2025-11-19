@@ -103,7 +103,6 @@ def check_alternative_results(driver):
                 )
                 if table.is_displayed():
                     print(f"Найдена таблица с селектором: {selector}")
-                    return True
             except:
                 continue
         
