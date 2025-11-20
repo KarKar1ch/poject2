@@ -9,13 +9,7 @@ import psycopg2
 import time
 
 
-DB_CONFIG = {
-    "host": "localhost",
-    "database": "parser",
-    "user": "postgres",
-    "password": "2009",
-    "port": "5432"
-}
+
 
 # Данные для заполнения
 company_data = [

@@ -5,7 +5,7 @@ import atexit
 
 app = Flask(__name__)
 
-# Регистрируем закрытие парсера при выходе
+
 @atexit.register
 def shutdown_parser():
     parser.close()
@@ -113,7 +113,7 @@ def parse_company():
 
 @app.route('/parse/companies', methods=['POST'])
 def parse_multiple_companies():
-    """Парсинг нескольких компаний"""
+   
     data = request.get_json()
     
     if 'inn_list' not in data or not isinstance(data['inn_list'], list):
@@ -126,7 +126,7 @@ def parse_multiple_companies():
     }), 201
 
 if __name__ == '__main__':
-    # Инициализируем базу данных при запуске
+   
     db.create_table()
     print("🚀 Сервер запускается...")
     app.run(debug=True, host='0.0.0.0', port=5000)
