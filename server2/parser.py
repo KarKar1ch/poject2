@@ -3,265 +3,98 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
-from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 import time
-import pandas as pd
 
-def setup_driver():
+a=0
 
-    chrome_options = Options()
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option('useAutomationExtension', False)
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
-  
-    chrome_options.add_argument("--start-maximized")
-    chrome_options.add_argument("--disable-extensions")
-    
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    return driver
+chrome_options = Options()
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--window-size=1920,1080")
 
-def search_company_by_inn(driver, inn):
+
+try:
    
-    try:
-       
-        print("Открываем страницу поиска...")
-        driver.get("https://rmsp.nalog.ru/search.html")
-        
-       
-        wait = WebDriverWait(driver, 15)
-        
-       
-        search_input = wait.until(
-            EC.presence_of_element_located((By.ID, "query"))
-        )
-        
-       
-        print(f"Вводим ИНН: {inn}")
-        search_input.clear()
-        time.sleep(0.5)
-        search_input.send_keys(inn)
-        time.sleep(0.5)
-        
-        
-        try:
-           
-            search_button = wait.until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Найти') or contains(text(), 'Поиск') or @type='submit']"))
-            )
-            search_button.click()
-        except:
-           
-            print("Используем отправку через ENTER...")
-            search_input.send_keys(Keys.ENTER)
-        
-       
-        print("Ожидаем загрузки результатов...")
-        time.sleep(3)
-        
-      
-        try:
-            # Ожидаем появления таблицы результатов
-            wait.until(
-                EC.presence_of_element_located((By.ID, "tblResultData"))
-            )
-            print("Таблица результатов найдена!")
-            return True
-        except TimeoutException:
-            # Проверяем другие возможные элементы результатов
-            print("Таблица не найдена, проверяем альтернативные элементы...")
-            return check_alternative_results(driver)
-            
-    except Exception as e:
-        print(f"Ошибка при поиске: {e}")
-        return False
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    
+    
+    driver.get("https://www.gosuslugi.ru/itorgs")
+    time.sleep(3)  
+    
+   
+    search_input = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input.search-input[role='combobox']"))
+    )
+    
+    
+    search_input.send_keys("3906900574")
+    time.sleep(2)
+    
+    
+    search_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "button.lookup-button"))
+    )
+    search_button.click()
+    
 
-def check_alternative_results(driver):
+    time.sleep(5)  
+    
+
+    try:
+        title_elements = driver.find_elements(By.CLASS_NAME, "title-h5")
+        for i, elem in enumerate(title_elements):
+            if "Компания входит в реестр аккредитованных ИТ-компаний" in elem.text:
+                a = True
+                print(a)
+                break
+    except Exception as e:
+        print(f"Ошибка при поиске по классу: {e}")
+    
     
     try:
-        wait = WebDriverWait(driver, 10)
-        
-       
-        possible_selectors = [
-            "#tblResultData",
-            "table.table",
-            "table.results", 
-            ".search-results",
-            ".results-table",
-            "table"
-        ]
-        
-        for selector in possible_selectors:
-            try:
-                table = wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, selector))
-                )
-                if table.is_displayed():
-                    print(f"Найдена таблица с селектором: {selector}")
-            except:
-                continue
-        
-      
-        no_results_selectors = [
-            "//*[contains(text(), 'ничего не найдено')]",
-            "//*[contains(text(), 'не найдено')]",
-            "//*[contains(text(), 'нет данных')]"
-        ]
-        
-        for selector in no_results_selectors:
-            try:
-                element = driver.find_element(By.XPATH, selector)
-                if element.is_displayed():
-                    print("Поиск не дал результатов")
-                    return True
-            except:
-                continue
-                
-        print("Не удалось определить результаты поиска")
-        return False
-        
+        title_xpath = driver.find_element(By.XPATH, "//*[contains(text(), 'Компания входит в реестр')]")
+        print(f"Найден элемент по XPath: {title_xpath.text}")
+        a = True
+        print(a)
     except Exception as e:
-        print(f"Ошибка при проверке альтернативных результатов: {e}")
-        return False
-
-def parse_results_table(driver):
+        print(f"Не удалось найти элемент по XPath: {e}")
+    
     
     try:
-        
-        wait = WebDriverWait(driver, 10)
-        table = wait.until(
-            EC.presence_of_element_located((By.ID, "tblResultData"))
-        )
-        
-       
-        rows = table.find_elements(By.TAG_NAME, "tr")
-        
-        results = []
-        
-        for i, row in enumerate(rows):
-            try:
-                
-                cells = row.find_elements(By.TAG_NAME, "td")
-                
-                if not cells:
-                    
-                    cells = row.find_elements(By.TAG_NAME, "th")
-                
-                row_data = [cell.text.strip() for cell in cells]
-                
-                if row_data:  
-                    results.append(row_data)
-                    print(f"Строка {i}: {row_data}")
-                    
-            except StaleElementReferenceException:
-                
-                print(f"Элемент устарел в строке {i}, пропускаем...")
-                continue
-            except Exception as e:
-                print(f"Ошибка в строке {i}: {e}")
-                continue
-        
-        return results
-        
+        title_css = driver.find_element(By.CSS_SELECTOR, ".title-h5")
+        print(f"Найден элемент по CSS: {title_css.text}")
+        if "Компания входит в реестр аккредитованных ИТ-компаний" in title_css.text:
+            a = True
+            print(a)
     except Exception as e:
-        print(f"Ошибка при парсинге таблицы: {e}")
-        return []
-
-def safe_parse_with_retry(driver, max_retries=3):
+        print(f"{e}")
     
-    for attempt in range(max_retries):
-        try:
-            results = parse_results_table(driver)
-            if results:
-                return results
-            else:
-                print(f"Попытка {attempt + 1}: данные не найдены")
-                time.sleep(2)
-        except StaleElementReferenceException:
-            print(f"Попытка {attempt + 1}: stale element, повторяем...")
-            time.sleep(2)
-        except Exception as e:
-            print(f"Попытка {attempt + 1}: ошибка {e}")
-            time.sleep(2)
-    
-    return []
+ 
+    page_text = driver.page_source
+    if "Компания входит в реестр аккредитованных ИТ-компаний" in page_text:
+        a = True
+        print(a)
+    else:
+        print("Текст не найден в исходном коде страницы")
+        
+   
+    visible_text = driver.find_element(By.TAG_NAME, "body").text
+    if "Компания входит в реестр аккредитованных ИТ-компаний" in visible_text:
+        a = True
+        print(a)
 
-def save_to_excel(data, filename="results.xlsx"):
-    
-    if data:
-        df = pd.DataFrame(data)
-        df.to_excel(filename, index=False, header=False)
-        print(f"Результаты сохранены в {filename}")
-
-def debug_page(driver):
+except Exception as e:
+    print(f"Произошла ошибка: {e}")
     
     try:
-       
-        driver.save_screenshot("debug_screenshot.png")
-        print("Скриншот сохранен как debug_screenshot.png")
-        
-
-        with open("debug_page.html", "w", encoding="utf-8") as f:
-            f.write(driver.page_source)
-        print("HTML сохранен как debug_page.html")
-        
-      
-        print(f"Текущий URL: {driver.current_url}")
-        
-    except Exception as e:
-        print(f"Ошибка при отладке: {e}")
-
-def main():
-    driver = None
+        driver.save_screenshot("error.png")
+    except:
+        pass
+finally:
     try:
-       
-        INN = "5024182694"
-        
-        
-        print("Запускаем браузер...")
-        driver = setup_driver()
-        
-       
-        if search_company_by_inn(driver, INN):
-            print("Поиск выполнен успешно!")
-            
-            
-            time.sleep(2)
-            
-            
-            results = safe_parse_with_retry(driver)
-            
-            if results:
-                print("\n" + "="*50)
-                print("НАЙДЕННЫЕ ДАННЫЕ:")
-                print("="*50)
-                
-                for i, row in enumerate(results):
-                    print(f"{i+1}. {row}")
-                
-               
-                save_to_excel(results)
-            else:
-                print("Данные не найдены в таблице")
-                debug_page(driver)
-        else:
-            print("Не удалось выполнить поиск")
-            debug_page(driver)
-            
-    except Exception as e:
-        print(f"Общая ошибка: {e}")
-        if driver:
-            debug_page(driver)
-        
-    finally:
-        if driver:
-            print("Закрываем браузер...")
-            driver.quit()
-
-if __name__ == "__main__":
-    main()
+        driver.quit()
+    except:
+        pass

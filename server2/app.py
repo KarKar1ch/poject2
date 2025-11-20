@@ -1,119 +1,132 @@
-from flask import Flask, jsonify
-
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+from database import db
 from parser import parser
-from database import Database
-import threading
-import uuid
+import atexit
 
 app = Flask(__name__)
 
-# Инициализируем БД
-print("🔄 Инициализация базы данных...")
-db = Database()
-
-# Хранилище задач
-tasks = {}
+# Регистрируем закрытие парсера при выходе
+@atexit.register
+def shutdown_parser():
+    parser.close()
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return jsonify({
+        "message": "Flask сервер для парсинга данных компаний с ФНС",
+        "endpoints": {
+            "create_company": "POST /companies",
+            "get_all_companies": "GET /companies", 
+            "get_company": "GET /companies/<id>",
+            "get_company_by_inn": "GET /companies/inn/<inn>",
+            "update_company": "PUT /companies/<id>",
+            "delete_company": "DELETE /companies/<id>",
+            "parse_company": "POST /parse/company",
+            "parse_multiple_companies": "POST /parse/companies",
+            "health_check": "GET /health"
+        }
+    })
 
-@app.route('/search', methods=['POST'])
-def search_inn():
-    """Запуск поиска по ИНН"""
+@app.route('/health')
+def health_check():
+    """Проверка статуса сервера"""
+    return jsonify({
+        "status": "healthy",
+        "database": "connected" if db.get_connection() else "disconnected"
+    })
+
+@app.route('/companies', methods=['POST'])
+def create_company():
+    """Создание новой записи о компании"""
     data = request.get_json()
-    inn = data.get('inn', '').strip()
     
-    if not inn or not inn.isdigit():
-        return jsonify({'error': 'Введите корректный ИНН'}), 400
+    required_fields = ['INN', 'OGRN', 'name']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Отсутствует обязательное поле: {field}"}), 400
     
-    # Проверяем, нет ли уже такой компании в БД
-    if db.company_exists(inn):
-        return jsonify({'error': 'Компания с таким ИНН уже есть в базе'}), 400
-    
-    # Создаем задачу
-    task_id = str(uuid.uuid4())
-    tasks[task_id] = {
-        'status': 'processing',
-        'progress': 0,
-        'message': 'Запуск поиска...',
-        'results': None
-    }
-    
-    # Запускаем в фоне
-    thread = threading.Thread(target=run_parser, args=(task_id, inn))
-    thread.daemon = True
-    thread.start()
-    
-    return jsonify({'task_id': task_id})
+    result = db.insert_company(data)
+    if result:
+        return jsonify(result), 201
+    else:
+        return jsonify({"error": "Не удалось создать компанию"}), 500
 
-@app.route('/status/<task_id>')
-def get_status(task_id):
-    """Получение статуса задачи"""
-    task = tasks.get(task_id)
-    if not task:
-        return jsonify({'error': 'Задача не найдена'}), 404
-    return jsonify(task)
+@app.route('/companies', methods=['GET'])
+def get_companies():
+    """Получение списка всех компаний"""
+    companies = db.get_all_companies()
+    return jsonify(companies), 200
 
-@app.route('/results/<task_id>')
-def get_results(task_id):
-    """Получение результатов"""
-    task = tasks.get(task_id)
-    if not task:
-        return jsonify({'error': 'Задача не найдена'}), 404
+@app.route('/companies/<int:company_id>', methods=['GET'])
+def get_company(company_id):
+    """Получение компании по ID"""
+    companies = db.get_all_companies()
+    company = next((c for c in companies if c['id'] == company_id), None)
     
-    if task['status'] != 'completed':
-        return jsonify({'error': 'Задача еще не завершена'}), 400
-    
-    # Сохраняем в БД с разбором полей
-    if task['results'] is not None:
-        db.save_company(task_id, task['results'])
-    
-    return jsonify({'results': task['results']})
+    if company:
+        return jsonify(company), 200
+    else:
+        return jsonify({"error": "Компания не найдена"}), 404
 
-@app.route('/history')
-def get_history():
-    """История поисков с детальной информацией"""
-    history = db.get_history()
-    return jsonify({'history': history})
+@app.route('/companies/inn/<string:inn>', methods=['GET'])
+def get_company_by_inn(inn):
+    """Получение компании по ИНН"""
+    company = db.get_company_by_inn(inn)
+    if company:
+        return jsonify(company), 200
+    else:
+        return jsonify({"error": "Компания не найдена"}), 404
 
-def run_parser(task_id, inn):
-    """Запуск парсера в фоновом режиме"""
-    try:
-        parser = Parser()
-        
-        # Обновляем статус
-        tasks[task_id].update({
-            'progress': 50,
-            'message': 'Идет поиск...'
-        })
-        
-        # Запускаем парсинг
-        success, results = parser.search(inn)
-        
-        if success:
-            tasks[task_id].update({
-                'status': 'completed',
-                'progress': 100,
-                'message': 'Поиск завершен',
-                'results': results
-            })
-        else:
-            tasks[task_id].update({
-                'status': 'error',
-                'progress': 100,
-                'message': 'Ошибка при поиске',
-                'results': None
-            })
-            
-    except Exception as e:
-        tasks[task_id].update({
-            'status': 'error',
-            'progress': 100,
-            'message': f'Ошибка: {str(e)}',
-            'results': None
-        })
+@app.route('/companies/<int:company_id>', methods=['PUT'])
+def update_company(company_id):
+    """Обновление данных компании"""
+    data = request.get_json()
+    
+    result = db.update_company(company_id, data)
+    if result:
+        return jsonify(result), 200
+    else:
+        return jsonify({"error": "Компания не найдена или нет данных для обновления"}), 404
+
+@app.route('/companies/<int:company_id>', methods=['DELETE'])
+def delete_company(company_id):
+    """Удаление компании"""
+    success = db.delete_company(company_id)
+    if success:
+        return jsonify({"message": "Компания успешно удалена"}), 200
+    else:
+        return jsonify({"error": "Компания не найдена"}), 404
+
+@app.route('/parse/company', methods=['POST'])
+def parse_company():
+    """Парсинг компании по ИНН"""
+    data = request.get_json()
+    
+    if 'inn' not in data:
+        return jsonify({"error": "Отсутствует поле 'inn'"}), 400
+    
+    result = parser.parse_company_by_inn(data['inn'])
+    if result:
+        return jsonify(result), 201
+    else:
+        return jsonify({"error": "Не удалось спарсить или сохранить компанию"}), 500
+
+@app.route('/parse/companies', methods=['POST'])
+def parse_multiple_companies():
+    """Парсинг нескольких компаний"""
+    data = request.get_json()
+    
+    if 'inn_list' not in data or not isinstance(data['inn_list'], list):
+        return jsonify({"error": "Отсутствует поле 'inn_list' или оно не является списком"}), 400
+    
+    results = parser.parse_multiple_companies(data['inn_list'])
+    return jsonify({
+        "parsed_count": len(results),
+        "companies": results
+    }), 201
 
 if __name__ == '__main__':
+    # Инициализируем базу данных при запуске
+    db.create_table()
+    print("🚀 Сервер запускается...")
     app.run(debug=True, host='0.0.0.0', port=5000)
