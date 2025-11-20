@@ -6,6 +6,7 @@ import atexit
 app = Flask(__name__)
 
 
+
 @atexit.register
 def shutdown_parser():
     parser.close()
