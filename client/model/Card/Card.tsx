@@ -42,7 +42,7 @@ export function ChartRadialText() {
       <CardContent className="flex-1 pb-0">
         <div className="mx-auto aspect-square max-h-[250px]">
           <RadialBarChart
-            width={280}
+            width={260}
             height={280}
             data={chartData}
             startAngle={0}
