@@ -1,6 +1,7 @@
 # parser.py
 import requests
 import time
+import pandas as pd
 from database import db
 from bs4 import BeautifulSoup
 import re
@@ -57,6 +58,43 @@ class CompanyParser:
         except Exception as e:
             print(f"❌ Ошибка инициализации Selenium: {e}")
             self.use_selenium = False
+
+    def load_companies_from_excel(self, file_path, sheet_name='Аккредитованные ИТ-компании', limit=60):
+        """Загружает компании из Excel файла"""
+        try:
+            print(f"📖 Загружаем данные из Excel файла: {file_path}")
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            
+            # Берем первые limit строк
+            companies_data = df.head(limit)
+            
+            companies = []
+            for index, row in companies_data.iterrows():
+                company = {
+                    'full_name': row.get('Полное наименование', ''),
+                    'short_name': row.get('Сокращенное наименование', ''),
+                    'inn': str(row.get('ИНН', '')).strip(),
+                    'registration_date': row.get('Дата постановки на учёт', ''),
+                    'revenue': row.get('Выручка, руб.', ''),
+                    'taxes_paid': row.get('Сумма уплаченных налогов, руб.', ''),
+                    'employees': row.get('Среднесписочная численность', ''),
+                    'usn_applied': row.get('Применяет УСН', ''),
+                    'msp_inclusion_date': row.get('Дата включения в реестр МСП', '')
+                }
+                
+                # Проверяем, что ИНН валидный (не пустой и не "Нет данных")
+                if company['inn'] and company['inn'] != 'Нет данных' and len(company['inn']) >= 10:
+                    companies.append(company)
+                    print(f"✅ Добавлена компания: {company['short_name']} (ИНН: {company['inn']})")
+                else:
+                    print(f"⚠️ Пропущена компания с невалидным ИНН: {company['short_name']}")
+            
+            print(f"📊 Всего загружено компаний для проверки: {len(companies)}")
+            return companies
+            
+        except Exception as e:
+            print(f"❌ Ошибка загрузки данных из Excel: {e}")
+            return []
 
     def _search_with_selenium(self, inn: str):
         """Поиск компании с использованием Selenium"""
@@ -121,12 +159,6 @@ class CompanyParser:
             
             # Получаем HTML страницы
             page_html = self.driver.page_source
-            print("✅ Получен HTML страницы с результатами")
-            
-            # Сохраняем HTML для отладки
-            with open(f'result_{inn}.html', 'w', encoding='utf-8') as f:
-                f.write(page_html)
-            print(f"💾 HTML сохранен в result_{inn}.html")
             
             return {'html': page_html}
             
@@ -149,10 +181,6 @@ class CompanyParser:
                     text_blocks.append(text)
             
             print(f"📝 Найдено текстовых блоков: {len(text_blocks)}")
-            
-            # Выводим первые 10 блоков для отладки
-            for i, text in enumerate(text_blocks[:10]):
-                print(f"  {i+1}. {text[:100]}...")
             
             # Анализируем текст страницы
             page_text = soup.get_text().lower()
@@ -286,10 +314,13 @@ class CompanyParser:
                 'status': ''
             }
 
-    def check_company_by_inn(self, inn: str):
+    def check_company_by_inn(self, inn: str, company_data: dict = None):
         """Проверяет компанию по ИНН"""
         try:
             print(f"\n🔍 ПРОВЕРКА КОМПАНИИ С ИНН: {inn}")
+            
+            if company_data:
+                print(f"📋 Компания: {company_data.get('short_name', 'N/A')}")
             
             search_result = self._search_with_selenium(inn)
             
@@ -300,7 +331,8 @@ class CompanyParser:
                     "in_reestr": False,
                     "details": None,
                     "error": "Не удалось выполнить поиск",
-                    "source": "selenium"
+                    "source": "selenium",
+                    "company_data": company_data
                 }
             
             if 'html' in search_result:
@@ -329,7 +361,8 @@ class CompanyParser:
                     "in_reestr": parsed_result['in_reestr'],
                     "details": company_info,
                     "message": parsed_result['message'],
-                    "source": "selenium"
+                    "source": "selenium",
+                    "company_data": company_data
                 }
             
         except Exception as e:
@@ -340,26 +373,59 @@ class CompanyParser:
                 "in_reestr": False,
                 "details": None,
                 "error": str(e),
-                "source": "selenium"
+                "source": "selenium",
+                "company_data": company_data
             }
 
-    def check_multiple_companies(self, inn_list: list):
+    def check_multiple_companies(self, companies_list: list):
         """Проверяет несколько компаний с задержками"""
         results = []
-        total = len(inn_list)
+        total = len(companies_list)
         
-        for i, inn in enumerate(inn_list, 1):
+        for i, company in enumerate(companies_list, 1):
             print(f"\n📊 [{i}/{total}] Проверка компании...")
             
-            result = self.check_company_by_inn(inn)
+            result = self.check_company_by_inn(company['inn'], company)
             results.append(result)
+            
+            # Сохраняем промежуточные результаты
+            self.save_results_to_csv(results, f"intermediate_results_{i}.csv")
             
             # Задержка между запросами (кроме последней)
             if i < total:
-                print("⏳ Задержка 3 секунды...")
-                time.sleep(3)
+                delay = 5  # Увеличиваем задержку для избежания блокировки
+                print(f"⏳ Задержка {delay} секунд...")
+                time.sleep(delay)
         
         return results
+
+    def save_results_to_csv(self, results, filename="parsing_results.csv"):
+        """Сохраняет результаты в CSV файл"""
+        try:
+            data_to_save = []
+            for result in results:
+                row = {
+                    'ИНН': result['inn'],
+                    'Сокращенное наименование': result.get('company_data', {}).get('short_name', ''),
+                    'Полное наименование': result.get('company_data', {}).get('full_name', ''),
+                    'В реестре': 'Да' if result['in_reestr'] else 'Нет',
+                    'Статус проверки': result.get('message', ''),
+                    'Найденное название': result.get('details', {}).get('name', ''),
+                    'ОГРН': result.get('details', {}).get('ogrn', ''),
+                    'Выручка': result.get('company_data', {}).get('revenue', ''),
+                    'Налоги': result.get('company_data', {}).get('taxes_paid', ''),
+                    'Сотрудники': result.get('company_data', {}).get('employees', ''),
+                    'Применяет УСН': result.get('company_data', {}).get('usn_applied', ''),
+                    'Ошибка': result.get('error', '')
+                }
+                data_to_save.append(row)
+            
+            df = pd.DataFrame(data_to_save)
+            df.to_csv(filename, index=False, encoding='utf-8-sig')
+            print(f"💾 Результаты сохранены в {filename}")
+            
+        except Exception as e:
+            print(f"⚠️ Ошибка сохранения в CSV: {e}")
 
     def close(self):
         """Закрывает сессию и драйвер"""
@@ -375,27 +441,33 @@ class CompanyParser:
 # Глобальный экземпляр парсера
 parser = CompanyParser(use_selenium=True)
 
-# Автоматический тест при запуске файла
+# Автоматический запуск парсинга первых 60 компаний
 if __name__ == '__main__':
-    print("🚀 АВТОМАТИЧЕСКИЙ ТЕСТ ПАРСЕРА")
+    print("🚀 ЗАПУСК ПАРСИНГА ПЕРВЫХ 60 КОМПАНИЙ ИЗ EXCEL")
     
     try:
-        # Тестируем несколько ИНН
-        test_inns = ["3900008350", "7708542719"]
+        # Загружаем компании из Excel
+        file_path = "Dop_materialy_Razrabotka_analiticheskoj_sistemy_Akkreditovannye (1).xlsx"
+        companies = parser.load_companies_from_excel(file_path, limit=60)
         
-        for inn in test_inns:
-            result = parser.check_company_by_inn(inn)
+        if companies:
+            print(f"\n🎯 Начинаем проверку {len(companies)} компаний...")
             
-            print(f"\n🎯 РЕЗУЛЬТАТ ДЛЯ {inn}:")
-            print(f"   Найдена: {result['exists']}") 
-            print(f"   В реестре: {result['in_reestr']}")
-            print(f"   Сообщение: {result['message']}")
+            # Проверяем все компании
+            results = parser.check_multiple_companies(companies)
             
-            if result['details']:
-                print(f"   Название: {result['details']['name']}")
-                print(f"   ОГРН: {result['details']['ogrn']}")
+            # Сохраняем финальные результаты
+            parser.save_results_to_csv(results, "final_parsing_results.csv")
             
-            print("-" * 50)
+            # Статистика
+            in_reestr_count = sum(1 for r in results if r['in_reestr'])
+            print(f"\n📈 СТАТИСТИКА:")
+            print(f"   Всего проверено: {len(results)}")
+            print(f"   В реестре: {in_reestr_count}")
+            print(f"   Не в реестре: {len(results) - in_reestr_count}")
+            
+        else:
+            print("❌ Не удалось загрузить компании из Excel файла")
             
     except Exception as e:
         print(f"💥 Критическая ошибка: {e}")
