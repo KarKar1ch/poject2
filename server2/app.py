@@ -1,133 +1,131 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+import uvicorn
 from database import db
 from parser import parser
-import atexit
+from contextlib import asynccontextmanager
 
-app = Flask(__name__)
+app = FastAPI()
 
+class CompanyCreate(BaseModel):
+    name: str
+    inn: str
+    ogrn: Optional[str] = None
+    reestr: bool = False
 
+class CompanyUpdate(BaseModel):
+    name: Optional[str] = None
+    inn: Optional[str] = None
+    ogrn: Optional[str] = None
+    reestr: Optional[bool] = None
 
-@atexit.register
-def shutdown_parser():
+class CheckRequest(BaseModel):
+    inn: str
+
+class MultipleCheckRequest(BaseModel):
+    inn_list: List[str]
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    db.init_connection()
+    db.create_table()
+    yield
+    # Shutdown
     parser.close()
+    db.close_connection()
 
-@app.route('/')
-def home():
-    return jsonify({
-        "message": "Flask сервер для парсинга данных компаний с ФНС",
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/")
+async def home():
+    return {
+        "message": "API для проверки компаний в реестре",
         "endpoints": {
             "create_company": "POST /companies",
             "get_all_companies": "GET /companies", 
-            "get_company": "GET /companies/<id>",
-            "get_company_by_inn": "GET /companies/inn/<inn>",
-            "update_company": "PUT /companies/<id>",
-            "delete_company": "DELETE /companies/<id>",
-            "parse_company": "POST /parse/company",
-            "parse_multiple_companies": "POST /parse/companies",
+            "get_company": "GET /companies/{id}",
+            "get_company_by_inn": "GET /companies/inn/{inn}",
+            "update_company": "PUT /companies/{id}",
+            "delete_company": "DELETE /companies/{id}",
+            "check_company": "POST /check/company",
+            "check_multiple_companies": "POST /check/companies",
             "health_check": "GET /health"
         }
-    })
+    }
 
-@app.route('/health')
-def health_check():
-    """Проверка статуса сервера"""
-    return jsonify({
+@app.get("/health")
+async def health_check():
+    return {
         "status": "healthy",
         "database": "connected" if db.get_connection() else "disconnected"
-    })
+    }
 
-@app.route('/companies', methods=['POST'])
-def create_company():
-    """Создание новой записи о компании"""
-    data = request.get_json()
-    
-    required_fields = ['INN', 'OGRN', 'name']
+@app.post("/companies", status_code=201)
+async def create_company(company: CompanyCreate):
+    required_fields = ['name', 'inn']
     for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Отсутствует обязательное поле: {field}"}), 400
+        if not getattr(company, field):
+            raise HTTPException(status_code=400, detail=f"Отсутствует обязательное поле: {field}")
     
-    result = db.insert_company(data)
+    result = db.insert_company(company.dict())
     if result:
-        return jsonify(result), 201
-    else:
-        return jsonify({"error": "Не удалось создать компанию"}), 500
+        return result
+    raise HTTPException(status_code=500, detail="Не удалось создать компанию")
 
-@app.route('/companies', methods=['GET'])
-def get_companies():
-    """Получение списка всех компаний"""
+@app.get("/companies")
+async def get_companies():
     companies = db.get_all_companies()
-    return jsonify(companies), 200
+    return companies
 
-@app.route('/companies/<int:company_id>', methods=['GET'])
-def get_company(company_id):
-    """Получение компании по ID"""
+@app.get("/companies/{company_id}")
+async def get_company(company_id: int):
     companies = db.get_all_companies()
     company = next((c for c in companies if c['id'] == company_id), None)
     
     if company:
-        return jsonify(company), 200
-    else:
-        return jsonify({"error": "Компания не найдена"}), 404
+        return company
+    raise HTTPException(status_code=404, detail="Компания не найдена")
 
-@app.route('/companies/inn/<string:inn>', methods=['GET'])
-def get_company_by_inn(inn):
-    """Получение компании по ИНН"""
+@app.get("/companies/inn/{inn}")
+async def get_company_by_inn(inn: str):
     company = db.get_company_by_inn(inn)
     if company:
-        return jsonify(company), 200
-    else:
-        return jsonify({"error": "Компания не найдена"}), 404
+        return company
+    raise HTTPException(status_code=404, detail="Компания не найдена")
 
-@app.route('/companies/<int:company_id>', methods=['PUT'])
-def update_company(company_id):
-    """Обновление данных компании"""
-    data = request.get_json()
-    
-    result = db.update_company(company_id, data)
+@app.put("/companies/{company_id}")
+async def update_company(company_id: int, company: CompanyUpdate):
+    result = db.update_company(company_id, company.dict(exclude_unset=True))
     if result:
-        return jsonify(result), 200
-    else:
-        return jsonify({"error": "Компания не найдена или нет данных для обновления"}), 404
+        return result
+    raise HTTPException(status_code=404, detail="Компания не найдена")
 
-@app.route('/companies/<int:company_id>', methods=['DELETE'])
-def delete_company(company_id):
-    """Удаление компании"""
+@app.delete("/companies/{company_id}")
+async def delete_company(company_id: int):
     success = db.delete_company(company_id)
     if success:
-        return jsonify({"message": "Компания успешно удалена"}), 200
-    else:
-        return jsonify({"error": "Компания не найдена"}), 404
+        return {"message": "Компания успешно удалена"}
+    raise HTTPException(status_code=404, detail="Компания не найдена")
 
-@app.route('/parse/company', methods=['POST'])
-def parse_company():
-    """Парсинг компании по ИНН"""
-    data = request.get_json()
-    
-    if 'inn' not in data:
-        return jsonify({"error": "Отсутствует поле 'inn'"}), 400
-    
-    result = parser.parse_company_by_inn(data['inn'])
+@app.post("/check/company", status_code=201)
+async def check_company(request: CheckRequest):
+    result = parser.check_company_by_inn(request.inn)
     if result:
-        return jsonify(result), 201
-    else:
-        return jsonify({"error": "Не удалось спарсить или сохранить компанию"}), 500
+        return result
+    raise HTTPException(status_code=500, detail="Не удалось проверить компанию")
 
-@app.route('/parse/companies', methods=['POST'])
-def parse_multiple_companies():
-   
-    data = request.get_json()
+@app.post("/check/companies")
+async def check_multiple_companies(request: MultipleCheckRequest):
+    if not request.inn_list:
+        raise HTTPException(status_code=400, detail="Список ИНН не может быть пустым")
     
-    if 'inn_list' not in data or not isinstance(data['inn_list'], list):
-        return jsonify({"error": "Отсутствует поле 'inn_list' или оно не является списком"}), 400
-    
-    results = parser.parse_multiple_companies(data['inn_list'])
-    return jsonify({
-        "parsed_count": len(results),
+    results = parser.check_multiple_companies(request.inn_list)
+    return {
+        "checked_count": len(results),
         "companies": results
-    }), 201
+    }
 
-if __name__ == '__main__':
-   
-    db.create_table()
-    print("🚀 Сервер запускается...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)

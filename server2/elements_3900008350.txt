@@ -1,0 +1,158 @@
+КЛЮЧЕВЫЕ ЭЛЕМЕНТЫ ДЛЯ ИНН 3900008350
+==================================================
+
+Тег: title
+Класс: 
+Текст: Реестр аккредитованных ИТ-компаний
+----------------------------------------
+Тег: style
+Класс: 
+Текст: :host {
+        width: 100%;
+      }
+
+      #start-app-loader {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        background: #fff;
+      }
+
+      .container-app-loader 
+----------------------------------------
+Тег: script
+Класс: 
+Текст: window.YandexRotorSettings = { WaiterEnabled: true, IsLoaded: false };
+----------------------------------------
+Тег: style
+Класс: 
+Текст: @charset "UTF-8";html,body,div{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}body{line-height:1}html{height:100%}body{display:flex;flex-direction:column}body{font-fam
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .notifiers-list[_ngcontent-ng-c584223298]{position:fixed;z-index:2147473650;display:flex;flex-flow:column;align-items:flex-start;left:32px;right:unset;bottom:24px}.notifiers-list[_ngcontent-ng-c584223
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .portal-disclaimer-list[_ngcontent-ng-c1554410309]{position:fixed;z-index:2147473650;display:flex;flex-flow:column;align-items:flex-start;left:32px;right:unset;bottom:24px}.portal-disclaimer-list[_ngc
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .header[_ngcontent-ng-c763681645]{background-color:#fff;box-shadow:0 2px 2px #9daccf14;z-index:4;position:relative}.header.header-fixed[_ngcontent-ng-c763681645]{position:fixed;top:0;left:0;width:100%
+----------------------------------------
+Тег: style
+Класс: 
+Текст: a[_ngcontent-ng-c2373808391]:focus-visible, button[_ngcontent-ng-c2373808391]:focus-visible{outline:2px solid #9B3BE5;outline-offset:2px}a[_ngcontent-ng-c2373808391]:focus-visible, button[_ngcontent-n
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .banner-wrapper[_ngcontent-ng-c3199607487]{padding:64px 0 130px}.white-box[_ngcontent-ng-c3199607487]{background:#fff;box-shadow:0 1px 4px #e3ebfc,0 24px 48px #e6ebf566;border-radius:12px;padding:24px
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .logo[_ngcontent-ng-c27038702]:focus-visible{outline:2px solid #9B3BE5;outline-offset:2px}[_nghost-ng-c27038702]{display:block}.logo[_ngcontent-ng-c27038702]{display:block;height:22px;width:124px;padd
+----------------------------------------
+Тег: style
+Класс: 
+Текст: button[_ngcontent-ng-c3672901016]:focus-visible{outline:2px solid #9B3BE5;outline-offset:2px}button[_ngcontent-ng-c3672901016]:focus-visible{outline-offset:2px}@supports not (font: -apple-system-body)
+----------------------------------------
+Тег: style
+Класс: 
+Текст: .catalog-menu[_ngcontent-ng-c1755743114]{height:100%;max-height:100%;overflow:hidden auto;position:fixed;top:64px;left:0;z-index:10;border-top:1px solid #E1E1E1}.catalog-menu[_ngcontent-ng-c1755743114
+----------------------------------------
+Тег: style
+Класс: 
+Текст: [_nghost-ng-c227685719]{display:block}.burger[_ngcontent-ng-c227685719]{width:24px;height:24px;cursor:pointer;position:relative}
+----------------------------------------
+Тег: div
+Класс: title-h1 hide show-md
+Текст: Реестр аккредитованных ИТ-компаний
+----------------------------------------
+Тег: div
+Класс: title-h2 hide-md
+Текст: Реестр аккредитованных ИТ-компаний
+----------------------------------------
+Тег: div
+Класс: text-plain-large mt-16 mt-md-24 hide show-md
+Текст: Проверьте, состоит ли компания в списке аккредитованных
+----------------------------------------
+Тег: div
+Класс: text-plain mt-16 mt-md-24 hide-md
+Текст: Проверьте, состоит ли компания в списке аккредитованных
+----------------------------------------
+Тег: div
+Класс: title-h5
+Текст: Компания не входит в реестр аккредитованных ИТ-компаний
+----------------------------------------
+Тег: p
+Класс: ng-star-inserted
+Текст: Вы искали по запросу «3900008350». Компания с такими реквизитами не найдена
+----------------------------------------
+Тег: p
+Класс: ng-star-inserted
+Текст: Проверьте, что правильно указали название компании или ИНН
+----------------------------------------
+Тег: p
+Класс: ng-star-inserted
+Текст: Вы искали по запросу «3900008350». Компания с такими реквизитами не найдена
+----------------------------------------
+Тег: p
+Класс: ng-star-inserted
+Текст: Проверьте, что правильно указали название компании или ИНН
+----------------------------------------
+Тег: a
+Класс: link-plain small
+Текст: Искать снова
+----------------------------------------
+Тег: a
+Класс: link-plain ng-star-inserted
+Текст: Проверить оператора связи на наличие лицензии
+----------------------------------------
+Тег: div
+Класс: title-h2 mb-24 hide show-md
+Текст: Как указывать название компании или ИНН
+----------------------------------------
+Тег: div
+Класс: title-h3 mb-24 hide-md
+Текст: Как указывать название компании или ИНН
+----------------------------------------
+Тег: p
+Класс: text-plain mb-16
+Текст: Можно указать ИНН или название компании. Организационно-правовую форму писать не обязательно. Главное — чтобы в названии не было опечаток
+----------------------------------------
+Тег: p
+Класс: text-plain mb-16
+Текст: Если нужно искать по ИНН, укажите 10 цифр ИНН без пробела
+----------------------------------------
+Тег: p
+Класс: text-plain mb-8
+Текст: Примеры запросов для ООО «Высокие Технологии для Жизни», ИНН 740000000
+----------------------------------------
+Тег: li
+Класс: mb-12
+Текст: Высокие Технологии для Жизни
+----------------------------------------
+Тег: li
+Класс: 
+Текст: ООО «Высокие Технологии для Жизни»
+----------------------------------------
+Тег: a
+Класс: simple text-plain-large color-text-helper ng-star-inserted
+Текст: Личный кабинет
+----------------------------------------
+Тег: a
+Класс: simple text-plain-large color-text-helper mt-16 ng-star-inserted
+Текст: Регистрация
+----------------------------------------
+Тег: a
+Класс: simple text-plain-large color-text-helper ng-star-inserted
+Текст: Как найти услугу
+----------------------------------------
+Тег: a
+Класс: simple text-plain-large color-text-helper mt-16 ng-star-inserted
+Текст: Карта центров обслуживания
+----------------------------------------
+Тег: span
+Класс: text-plain-large color-text-helper
+Текст: г Калининград
+----------------------------------------
