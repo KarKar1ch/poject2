@@ -30,7 +30,7 @@ const CardFooter = ({ children, className }: any) => (
 )
 
 const chartData = [
-  { browser: "safari", visitors: 120, fill: "#3b82f6" },
+  { browser: "safari", visitors: 120, fill: "#5D39F5" },
 ]
 
 export function ChartRadialText() {

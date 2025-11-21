@@ -6,21 +6,26 @@ import { ChartCard, ChartCardContent, ChartCardDescription, ChartCardFooter, Cha
 import { ChartConfig, ChartContainer ,ChartTooltip, ChartTooltipContent, } from "@/componets/ui/chart-components";
 
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "Январь", Всего: 186, Аккредитовано: 80 },
+  { month: "Февраль", Всего: 305, Аккредитовано: 200 },
+  { month: "Март", Всего: 237, Аккредитовано: 120 },
+  { month: "Апрель", Всего: 190, Аккредитовано: 190 },
+  { month: "Май", Всего: 209, Аккредитовано: 130 },
+  { month: "Июнь", Всего: 214, Аккредитовано: 140 },
+  { month: "Июль", Всего: 414, Аккредитовано: 140 },
+  { month: "Август", Всего: 384, Аккредитовано: 345 },
+  { month: "Сентябрь", Всего: 314, Аккредитовано: 290 },
+  { month: "Октябрь", Всего: 214, Аккредитовано: 214 },
+  { month: "Ноябрь", Всего: 314, Аккредитовано: 261 },
 ];
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  Всего: {
+    label: "Всего",
     color: "#9E88F9",
   },
-  mobile: {
-    label: "Mobile",
+  Аккредитовано: {
+    label: "Аккредитовано",
     color: "#5D39F5",
   },
 } satisfies ChartConfig;
@@ -54,19 +59,19 @@ export function ChartAreaStacked() {
                 content={<ChartTooltipContent indicator="dot" />}
               />
               <Area
-                dataKey="mobile"
+                dataKey="Всего"
                 type="natural"
-                fill={chartConfig.mobile.color}
+                fill={chartConfig.Всего.color}
                 fillOpacity={0.4}
-                stroke={chartConfig.mobile.color}
+                stroke={chartConfig.Всего.color}
                 stackId="a"
               />
               <Area
-                dataKey="desktop"
+                dataKey="Аккредитовано"
                 type="natural"
-                fill={chartConfig.desktop.color}
+                fill={chartConfig.Аккредитовано.color}
                 fillOpacity={0.4}
-                stroke={chartConfig.desktop.color}
+                stroke={chartConfig.Аккредитовано.color}
                 stackId="a"
               />
             </AreaChart>

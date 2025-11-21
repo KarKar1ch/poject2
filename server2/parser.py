@@ -1,4 +1,4 @@
-# parser.py
+
 import requests
 import time
 import pandas as pd
@@ -59,7 +59,7 @@ class CompanyParser:
             print(f"❌ Ошибка инициализации Selenium: {e}")
             self.use_selenium = False
 
-    def load_companies_from_excel(self, file_path, sheet_name='Аккредитованные ИТ-компании', limit=60):
+    def load_companies_from_excel(self, file_path, sheet_name='Аккредитованные ИТ-компании', limit=120):
         """Загружает компании из Excel файла"""
         try:
             print(f"📖 Загружаем данные из Excel файла: {file_path}")
@@ -477,12 +477,12 @@ parser = CompanyParser(use_selenium=True)
 
 # Автоматический запуск парсинга первых 60 компаний
 if __name__ == '__main__':
-    print("🚀 ЗАПУСК ПАРСИНГА ПЕРВЫХ 60 КОМПАНИЙ ИЗ EXCEL")
+    print("🚀 ЗАПУСК ПАРСИНГА ПЕРВЫХ 120КОМПАНИЙ ИЗ EXCEL")
     
     try:
         # Загружаем компании из Excel
         file_path = "Dop_materialy_Razrabotka_analiticheskoj_sistemy_Akkreditovannye (1).xlsx"
-        companies = parser.load_companies_from_excel(file_path, limit=60)
+        companies = parser.load_companies_from_excel(file_path, limit=120)
         
         if companies:
             print(f"\n🎯 Начинаем проверку {len(companies)} компаний...")
