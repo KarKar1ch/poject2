@@ -1,12 +1,39 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
 from database import db
 from parser import parser
 from contextlib import asynccontextmanager
+import logging
 
-app = FastAPI()
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting up...")
+    db.init_connection()
+    db.create_table()
+    yield
+    # Shutdown
+    logger.info("Shutting down...")
+    parser.close()
+    db.close_connection()
+
+app = FastAPI(lifespan=lifespan)
+
+# Более агрессивная настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разрешаем все origins для тестирования
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешить все методы
+    allow_headers=["*"],  # Разрешить все заголовки
+)
 
 class CompanyCreate(BaseModel):
     name: str
@@ -25,18 +52,6 @@ class CheckRequest(BaseModel):
 
 class MultipleCheckRequest(BaseModel):
     inn_list: List[str]
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    db.init_connection()
-    db.create_table()
-    yield
-    # Shutdown
-    parser.close()
-    db.close_connection()
-
-app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 async def home():
@@ -57,13 +72,39 @@ async def home():
 
 @app.get("/health")
 async def health_check():
+    db_status = "connected" if db.get_connection() else "disconnected"
+    logger.info(f"Health check - Database: {db_status}")
     return {
         "status": "healthy",
-        "database": "connected" if db.get_connection() else "disconnected"
+        "database": db_status
     }
+
+@app.get("/companies")
+async def get_companies():
+    logger.info("GET /companies endpoint called")
+    companies = db.get_all_companies()
+    logger.info(f"Returning {len(companies)} companies")
+    return companies
+
+@app.get("/companies/{company_id}")
+async def get_company(company_id: int):
+    logger.info(f"GET /companies/{company_id} endpoint called")
+    company = db.get_company_by_id(company_id)
+    if company:
+        return company
+    raise HTTPException(status_code=404, detail="Компания не найдена")
+
+@app.get("/companies/inn/{inn}")
+async def get_company_by_inn(inn: str):
+    logger.info(f"GET /companies/inn/{inn} endpoint called")
+    company = db.get_company_by_inn(inn)
+    if company:
+        return company
+    raise HTTPException(status_code=404, detail="Компания не найдена")
 
 @app.post("/companies", status_code=201)
 async def create_company(company: CompanyCreate):
+    logger.info("POST /companies endpoint called")
     required_fields = ['name', 'inn']
     for field in required_fields:
         if not getattr(company, field):
@@ -74,29 +115,9 @@ async def create_company(company: CompanyCreate):
         return result
     raise HTTPException(status_code=500, detail="Не удалось создать компанию")
 
-@app.get("/companies")
-async def get_companies():
-    companies = db.get_all_companies()
-    return companies
-
-@app.get("/companies/{company_id}")
-async def get_company(company_id: int):
-    companies = db.get_all_companies()
-    company = next((c for c in companies if c['id'] == company_id), None)
-    
-    if company:
-        return company
-    raise HTTPException(status_code=404, detail="Компания не найдена")
-
-@app.get("/companies/inn/{inn}")
-async def get_company_by_inn(inn: str):
-    company = db.get_company_by_inn(inn)
-    if company:
-        return company
-    raise HTTPException(status_code=404, detail="Компания не найдена")
-
 @app.put("/companies/{company_id}")
 async def update_company(company_id: int, company: CompanyUpdate):
+    logger.info(f"PUT /companies/{company_id} endpoint called")
     result = db.update_company(company_id, company.dict(exclude_unset=True))
     if result:
         return result
@@ -104,6 +125,7 @@ async def update_company(company_id: int, company: CompanyUpdate):
 
 @app.delete("/companies/{company_id}")
 async def delete_company(company_id: int):
+    logger.info(f"DELETE /companies/{company_id} endpoint called")
     success = db.delete_company(company_id)
     if success:
         return {"message": "Компания успешно удалена"}
@@ -111,6 +133,7 @@ async def delete_company(company_id: int):
 
 @app.post("/check/company", status_code=201)
 async def check_company(request: CheckRequest):
+    logger.info(f"POST /check/company endpoint called for INN: {request.inn}")
     result = parser.check_company_by_inn(request.inn)
     if result:
         return result
@@ -118,6 +141,7 @@ async def check_company(request: CheckRequest):
 
 @app.post("/check/companies")
 async def check_multiple_companies(request: MultipleCheckRequest):
+    logger.info(f"POST /check/companies endpoint called for {len(request.inn_list)} companies")
     if not request.inn_list:
         raise HTTPException(status_code=400, detail="Список ИНН не может быть пустым")
     
@@ -128,4 +152,11 @@ async def check_multiple_companies(request: MultipleCheckRequest):
     }
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)
+    print("🚀 Запуск FastAPI сервера на http://localhost:5000")
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=5000,
+        reload=True,
+        log_level="info"
+    )

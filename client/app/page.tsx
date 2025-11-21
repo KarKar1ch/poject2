@@ -1,5 +1,6 @@
 "use client"
-
+import Card from '@/model/Card/Card';
+import Header from '@/model/Header/Header';
 import React, { useEffect, useState } from 'react';
 
 interface Company {
@@ -17,7 +18,7 @@ const YourComponent: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://0.0.0.0:5000/companies');
+        const response = await fetch('http://localhost:5000/companies');
 
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -45,14 +46,22 @@ const YourComponent: React.FC = () => {
   }
 
   return (
-    <div>
-      {data ? (
-        data.map((company) => (
-          <div key={company.id}>{company.name} {company.reestr}</div>
-        ))
-      ) : (
-        <div>Данные не найдены</div>
-      )}
+    <div className='bg-[]'>
+      <Header/>
+      <main>
+        <div>
+          <Card/>
+          <Card/>
+          <Card/>
+        </div>
+          {data ? (
+            data.map((company) => (
+              <div key={company.id}>{company.name} {company.reestr}</div>
+            ))
+          ) : (
+            <div>Данные не найдены</div>
+          )}
+      </main>
     </div>
   );
 };

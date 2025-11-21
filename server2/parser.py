@@ -166,7 +166,7 @@ class CompanyParser:
             print(f"❌ Ошибка Selenium: {e}")
             return None
 
-    def _parse_search_result(self, html_content: str, inn: str):
+    def _parse_search_result(self, html_content: str, inn: str, company_data: dict = None):
         """Парсит HTML результат поиска"""
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
@@ -207,7 +207,7 @@ class CompanyParser:
                     return {
                         'in_reestr': False,
                         'message': 'Компания не входит в реестр аккредитованных ИТ-компаний',
-                        'details': self._extract_company_details(soup, inn)
+                        'details': self._extract_company_details(soup, inn, company_data)
                     }
             
             # Проверяем фразы для "В реестре"
@@ -217,11 +217,11 @@ class CompanyParser:
                     return {
                         'in_reestr': True,
                         'message': 'Компания входит в реестр аккредитованных ИТ-компаний',
-                        'details': self._extract_company_details(soup, inn)
+                        'details': self._extract_company_details(soup, inn, company_data)
                     }
             
             # Если явных фраз нет, проверяем наличие информации о компании
-            company_info = self._extract_company_details(soup, inn)
+            company_info = self._extract_company_details(soup, inn, company_data)
             if company_info and company_info.get('name') and company_info['name'] != f"Компания ИНН {inn}":
                 print("✅ Найдена информация о компании - предполагаем что в реестре")
                 return {
@@ -245,49 +245,27 @@ class CompanyParser:
                 'details': None
             }
 
-    def _extract_company_details(self, soup: BeautifulSoup, inn: str):
+    def _extract_company_details(self, soup: BeautifulSoup, inn: str, company_data: dict = None):
         """Извлекает детальную информацию о компании"""
         try:
+            # ВСЕГДА используем название из Excel как основное
+            company_name = f"Компания ИНН {inn}"
+            if company_data and company_data.get('short_name'):
+                company_name = company_data['short_name']
+            elif company_data and company_data.get('full_name'):
+                company_name = company_data['full_name']
+            
+            print(f"✅ Используем название из Excel: {company_name}")
+            
             company_info = {
-                'name': f"Компания ИНН {inn}",
+                'name': company_name,  # Всегда используем название из Excel
                 'inn': inn,
                 'ogrn': '',
                 'address': '',
                 'status': ''
             }
             
-            # Ищем название компании в различных элементах
-            name_candidates = []
-            
-            # Ищем в заголовках
-            for tag in ['h1', 'h2', 'h3', 'h4', 'h5']:
-                elements = soup.find_all(tag)
-                for element in elements:
-                    text = element.get_text(strip=True)
-                    if text and len(text) > 5:
-                        name_candidates.append(text)
-            
-            # Ищем в div с классами содержащими company, name, title
-            for div in soup.find_all('div', class_=True):
-                classes = ' '.join(div.get('class', []))
-                if any(word in classes.lower() for word in ['company', 'name', 'title', 'organization']):
-                    text = div.get_text(strip=True)
-                    if text and len(text) > 5:
-                        name_candidates.append(text)
-            
-            # Выбираем лучшее название (самое длинное, не содержащее служебных слов)
-            best_name = f"Компания ИНН {inn}"
-            for candidate in name_candidates:
-                if (len(candidate) > len(best_name) and 
-                    not any(word in candidate.lower() for word in ['реестр', 'аккредит', 'поиск', 'результат', 'каталог', 'войти', 'госуслуги', 'ит-компани'])):
-                    best_name = candidate
-            
-            company_info['name'] = best_name
-            
-            if best_name != f"Компания ИНН {inn}":
-                print(f"✅ Название компании: {best_name}")
-            
-            # Ищем ОГРН
+            # Пытаемся найти ОГРН на сайте (но НЕ меняем название!)
             all_text = soup.get_text()
             ogrn_patterns = [
                 r'ОГРН[:\s]*([0-9]{13,15})',
@@ -299,15 +277,34 @@ class CompanyParser:
                 ogrn_match = re.search(pattern, all_text, re.IGNORECASE)
                 if ogrn_match:
                     company_info['ogrn'] = ogrn_match.group(1)
-                    print(f"✅ ОГРН: {company_info['ogrn']}")
+                    print(f"✅ Найден ОГРН на сайте: {company_info['ogrn']}")
                     break
+            
+            # Для отладки: показываем какие названия нашли на сайте
+            name_candidates = []
+            for tag in ['h1', 'h2', 'h3', 'h4', 'h5']:
+                elements = soup.find_all(tag)
+                for element in elements:
+                    text = element.get_text(strip=True)
+                    if text and len(text) > 5:
+                        name_candidates.append(text)
+            
+            if name_candidates:
+                print(f"🔍 На сайте найдены заголовки: {name_candidates[:3]}")  # Показываем первые 3
             
             return company_info
             
         except Exception as e:
             print(f"Ошибка извлечения деталей компании: {e}")
+            # Все равно возвращаем название из Excel
+            fallback_name = f"Компания ИНН {inn}"
+            if company_data and company_data.get('short_name'):
+                fallback_name = company_data['short_name']
+            elif company_data and company_data.get('full_name'):
+                fallback_name = company_data['full_name']
+                
             return {
-                'name': f"Компания ИНН {inn}",
+                'name': fallback_name,
                 'inn': inn,
                 'ogrn': '',
                 'address': '',
@@ -320,26 +317,47 @@ class CompanyParser:
             print(f"\n🔍 ПРОВЕРКА КОМПАНИИ С ИНН: {inn}")
             
             if company_data:
-                print(f"📋 Компания: {company_data.get('short_name', 'N/A')}")
+                print(f"🎯 Компания из Excel: {company_data.get('short_name', 'N/A')}")
             
             search_result = self._search_with_selenium(inn)
             
             if not search_result:
+                # Если поиск не удался, все равно сохраняем данные из Excel
+                company_info = {
+                    "name": company_data.get('short_name', f"Компания ИНН {inn}") if company_data else f"Компания ИНН {inn}",
+                    "inn": inn,
+                    "ogrn": '',
+                    "reestr": False
+                }
+                
+                # Сохраняем в базу данных
+                try:
+                    db_result = db.insert_company(company_info)
+                    if db_result:
+                        print(f"✅ Данные сохранены в БД (из Excel)")
+                    else:
+                        print(f"⚠️ Не удалось сохранить в БД")
+                except Exception as e:
+                    print(f"⚠️ Ошибка сохранения в БД: {e}")
+                
                 return {
                     "inn": inn,
                     "exists": False,
                     "in_reestr": False,
-                    "details": None,
+                    "details": company_info,
                     "error": "Не удалось выполнить поиск",
-                    "source": "selenium",
+                    "source": "excel_fallback",
                     "company_data": company_data
                 }
             
             if 'html' in search_result:
-                parsed_result = self._parse_search_result(search_result['html'], inn)
+                parsed_result = self._parse_search_result(search_result['html'], inn, company_data)
+                
+                # ВСЕГДА используем название из Excel, независимо от того, что нашли на сайте
+                final_name = company_data.get('short_name', f"Компания ИНН {inn}") if company_data else f"Компания ИНН {inn}"
                 
                 company_info = {
-                    "name": parsed_result['details']['name'] if parsed_result['details'] else f"Компания ИНН {inn}",
+                    "name": final_name,  # Всегда название из Excel
                     "inn": inn,
                     "ogrn": parsed_result['details']['ogrn'] if parsed_result['details'] else '',
                     "reestr": parsed_result['in_reestr']
@@ -349,7 +367,7 @@ class CompanyParser:
                 try:
                     db_result = db.insert_company(company_info)
                     if db_result:
-                        print(f"✅ Данные сохранены в БД")
+                        print(f"✅ Компания '{final_name}' сохранена в БД")
                     else:
                         print(f"⚠️ Не удалось сохранить в БД")
                 except Exception as e:
@@ -367,13 +385,29 @@ class CompanyParser:
             
         except Exception as e:
             print(f"💥 Ошибка при проверке компании: {e}")
+            
+            # При ошибке все равно сохраняем данные из Excel
+            final_name = company_data.get('short_name', f"Компания ИНН {inn}") if company_data else f"Компания ИНН {inn}"
+            company_info = {
+                "name": final_name,
+                "inn": inn,
+                "ogrn": '',
+                "reestr": False
+            }
+            
+            try:
+                db.insert_company(company_info)
+                print(f"✅ Компания '{final_name}' сохранена в БД (при ошибке)")
+            except Exception as db_error:
+                print(f"⚠️ Ошибка сохранения в БД при ошибке: {db_error}")
+            
             return {
                 "inn": inn,
                 "exists": False,
                 "in_reestr": False,
-                "details": None,
+                "details": company_info,
                 "error": str(e),
-                "source": "selenium",
+                "source": "error_fallback",
                 "company_data": company_data
             }
 
