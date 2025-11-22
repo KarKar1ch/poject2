@@ -143,7 +143,7 @@ export default function Tables({ data }: { data: any[] | null }) {
         </div>
       </div>
 
-      {/* Форма добавления компании */}
+     
       {isAdding && (
         <div className="p-4 border-b border-gray-200 ">
           <h4 className="text-md font-semibold text-gray-800 mb-3">Добавить новую компанию</h4>

@@ -1,5 +1,5 @@
 "use client"
-import { ChartRadialText } from '@/model/Card/Card'
+import { PieDonutText } from '@/model/Card/Card'
 import { ChartRadialText2 } from '@/model/Card/Card2';
 import { ChartRadialText3 } from '@/model/Card/Card3';
 import Header from '@/model/Header/Header';
@@ -16,12 +16,25 @@ const MainPage: React.FC = () => {
     router.push('/tables');
   };
 
+
+  const data = [
+    { name: "Chrome", value: 275, color: "#3b82f6" },
+    { name: "Safari", value: 200, color: "#10b981" },
+    { name: "Firefox", value: 187, color: "#f59e0b" },
+  ]
+
+
   return (
       <div className='bg-[#ECEDF0] pl-[15px] pr-[15px] h-full pb-[15px]'>
         <Header/>        
         <main className='mt-[30px]'>
           <div className='flex justify-between'>
-            <ChartRadialText/>
+                <PieDonutText
+                    data={data} 
+                    title="Колличество компаний без задолжности"
+                    description="Ноябрь"
+                    
+                  />
             <ChartRadialText2/>
             <ChartRadialText3/>
           </div>
@@ -33,7 +46,7 @@ const MainPage: React.FC = () => {
             
             <button 
               onClick={handleButtonClick} 
-              className='w-full h-[35px] bg-[#5D39F5] rounded-lg transition-all hover:bg-[#2563eb] text-white font-medium'
+              className='w-full h-[40px] bg-[#5D39F5] rounded-[30px] transition-all hover:bg-[#2563eb] text-white font-medium'
             >
               Посмотреть в таблице
             </button>

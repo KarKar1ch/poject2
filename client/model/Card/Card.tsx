@@ -1,69 +1,102 @@
 "use client"
-import { TrendingUp } from "lucide-react"
-import { RadialBar, RadialBarChart, PolarGrid, PolarRadiusAxis, Label } from "recharts"
+import * as React from "react"
+import {   ChartCard,
+  ChartCardHeader,
+  ChartCardFooter,
+  ChartCardTitle,
+  ChartCardDescription,
+  ChartCardContent, } from "@/componets/ui/chart-card"
+import { ChartContainer,  ChartTooltip,
+  PieChart,
+  Pie,
+  Label } from "@/componets/ui/charts-parts"
 
-// Простые компоненты карточек
-const Card = ({ children, className }: any) => (
-  <div className={`rounded-[30px] bg-white shadow-sm w-[400px] ${className}`}>
-    {children}
-  </div>
-)
+export interface PieDonutChartData {
+  name: string
+  value: number
+  color?: string
+}
 
-const CardHeader = ({ children, className }: any) => (
-  <div className={`p-6 pb-0 ${className}`}>{children}</div>
-)
+interface PieDonutTextProps {
+  data?: PieDonutChartData[] // делаем опциональным
+  title?: string
+  description?: string
+  centerText?: string
+  centerLabel?: string
+  height?: number
+}
 
-const CardTitle = ({ children }: any) => (
-  <h3 className="text-2xl font-semibold">{children}</h3>
-)
+export const PieDonutText: React.FC<PieDonutTextProps> = ({
+  data = [], 
+  title = "Диаграмма",
+  description,
+  centerText,
+  centerLabel = "Всего",
+  height = 300,
+}) => {
+  const total = React.useMemo(() => {
+    return data?.reduce((sum, item) => sum + item.value, 0) || 0
+  }, [data])
 
-const CardDescription = ({ children }: any) => (
-  <p className="text-sm text-gray-500 mt-2">{children}</p>
-)
+  const chartConfig = React.useMemo(() => {
+    return data?.reduce((config, item) => {
+      config[item.name] = {
+        label: item.name,
+        color: item.color || `hsl(${Math.random() * 360}, 70%, 50%)`
+      }
+      return config
+    }, {} as any) || {}
+  }, [data])
 
-const CardContent = ({ children, className }: any) => (
-  <div className={`p-6 ${className}`}>{children}</div>
-)
+  // Если данных нет, показываем заглушку
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard className="w-[400px]">
+        <ChartCardHeader>
+          <ChartCardTitle>{title}</ChartCardTitle>
+          {description && <ChartCardDescription>{description}</ChartCardDescription>}
+        </ChartCardHeader>
+        <ChartCardContent>
+          <div className="flex items-center justify-center" style={{ height }}>
+            <p className="text-gray-500">Нет данных для отображения</p>
+          </div>
+        </ChartCardContent>
+      </ChartCard>
+    )
+  }
 
-const CardFooter = ({ children, className }: any) => (
-  <div className={`p-6 pt-0 ${className}`}>{children}</div>
-)
-
-const chartData = [
-  { browser: "safari", visitors: 120, fill: "#5D39F5" },
-]
-
-export function ChartRadialText() {
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Колличество компаний</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <div className="mx-auto aspect-square max-h-[250px]">
-          <RadialBarChart
-            width={260}
-            height={280}
-            data={chartData}
-            startAngle={0}
-            endAngle={250}
-            innerRadius={100}
-            outerRadius={120}
-          >
-            <PolarGrid
-              gridType="circle"
-              radialLines={true}
+    <ChartCard className="w-[400px]">
+      <ChartCardHeader>
+        <ChartCardTitle>{title}</ChartCardTitle>
+        {description && <ChartCardDescription>{description}</ChartCardDescription>}
+      </ChartCardHeader>
+      
+      <ChartCardContent>
+        <ChartContainer 
+          config={chartConfig}
+          className="mx-auto aspect-square"
+          style={{ height }}
+        >
+          <PieChart>
+            <ChartTooltip />
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              innerRadius="60%"
+              outerRadius="80%"
               stroke="none"
-            />
-            <RadialBar 
-              dataKey="visitors" 
-              background 
-              cornerRadius={50}
-              fill="#3b82f6"
-            />
-            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+            >
+              {data.map((entry, index) => (
+                <cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color || `hsl(${index * 60}, 70%, 50%)`} 
+                />
+              ))}
+              
               <Label
-                content={({ viewBox }: any) => {
+                content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                     return (
                       <text
@@ -75,31 +108,37 @@ export function ChartRadialText() {
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
+                          className="text-2xl font-bold fill-foreground"
                         >
-                          {chartData[0].visitors.toLocaleString()}
+                          {centerText || total.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
+                          y={viewBox.cy + 24}
+                          className="text-sm fill-muted-foreground"
                         >
-                          Всего
+                          {centerLabel}
                         </tspan>
                       </text>
                     )
                   }
+                  return null
                 }}
               />
-            </PolarRadiusAxis>
-          </RadialBarChart>
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      </ChartCardContent>
+      
+      <ChartCardFooter>
+        <div className="text-sm text-muted-foreground">
+          Общее количество: {total.toLocaleString()}
         </div>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 text-center leading-none font-medium">
-          Выросло 5.2% за ноябрь 
-        </div>
-      </CardFooter>
-    </Card>
+      </ChartCardFooter>
+    </ChartCard>
   )
 }
+
+
+
+export default PieDonutText
