@@ -10,6 +10,7 @@ interface Company {
   reestr: boolean;
 }
 
+
 export default function Tables({ data }: { data: any[] | null }) {
   const [companies, setCompanies] = useState<Company[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);

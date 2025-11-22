@@ -128,14 +128,14 @@ export const PieDonutText: React.FC<PieDonutTextProps> = ({
             
             {/* Основные данные */}
             <Pie
-              data={chartDataWithBackground.filter(item => item.name !== "background")}
-              dataKey="value"
-              nameKey="name"
-              innerRadius="60%"
-              outerRadius="80%"
-              stroke="none"
-              startAngle={90}
-              endAngle={-270}
+                data={chartDataWithBackground}
+                dataKey="value"
+                nameKey="name"
+                innerRadius="60%"
+                outerRadius="80%"
+                stroke="none"
+                startAngle={90}
+                endAngle={-270}
             >
               {chartDataWithBackground
                 .filter(item => item.name !== "background")
