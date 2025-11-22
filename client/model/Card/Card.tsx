@@ -28,7 +28,7 @@ interface PieDonutTextProps {
 
 export const PieDonutText: React.FC<PieDonutTextProps> = ({
   data = [], 
-  title = "Диаграмма",
+  title = "Открытые вакансии",
   description,
   centerText,
   centerLabel = "Всего",

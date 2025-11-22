@@ -18,9 +18,8 @@ const MainPage: React.FC = () => {
 
 
   const data = [
-    { name: "Chrome", value: 275, color: "#3b82f6" },
-    { name: "Safari", value: 200, color: "#10b981" },
-    { name: "Firefox", value: 187, color: "#f59e0b" },
+    { name: "Chrome", value: 375, color: "#10b98120" },
+    { name: "Safari", value: 50, color: "#10b981" },
   ]
 
 
