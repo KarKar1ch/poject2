@@ -107,7 +107,7 @@ const CompanyPage: React.FC = () => {
           <p className="text-gray-600 mt-2">ИНН: {company.inn}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-[30px] shadow-sm p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Основная информация</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -155,7 +155,7 @@ const CompanyPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-[30px] shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Адрес и дополнительные сведения</h2>
           <div className="space-y-4">
             <div>
@@ -166,10 +166,6 @@ const CompanyPage: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-500">Источник данных</label>
                 <p className="mt-1 text-sm text-gray-900">{company.source}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Дата обновления</label>
-                <p className="mt-1 text-sm text-gray-900">{company.parsed_at}</p>
               </div>
             </div>
           </div>

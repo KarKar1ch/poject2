@@ -136,17 +136,16 @@ export default function Tables({ data }: { data: any[] | null }) {
           <button
             onClick={exportToExcel}
             disabled={!data || data.length === 0}
-            className="px-4 py-2 bg-[#5D39F5] text-white rounded-[30px] hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
+            className="pl-[10px] bg-[#5D39F5] text-white w-[40px] rounded-[100%] hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
           >
             <Image src="/download_24.svg" alt="funnel" width={20} height={20}/>
-            Скачать Excel
           </button>
         </div>
       </div>
 
       {/* Форма добавления компании */}
       {isAdding && (
-        <div className="p-4 border-b border-gray-200 bg-blue-50">
+        <div className="p-4 border-b border-gray-200 ">
           <h4 className="text-md font-semibold text-gray-800 mb-3">Добавить новую компанию</h4>
           {error && (
             <div className="mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -155,9 +154,6 @@ export default function Tables({ data }: { data: any[] | null }) {
           )}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Название компании *
-              </label>
               <input
                 type="text"
                 value={newCompany.name}
@@ -167,9 +163,6 @@ export default function Tables({ data }: { data: any[] | null }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ИНН *
-              </label>
               <input
                 type="text"
                 value={newCompany.inn}
@@ -178,36 +171,14 @@ export default function Tables({ data }: { data: any[] | null }) {
                 placeholder="Введите ИНН"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ОГРН *
-              </label>
-              <input
-                type="text"
-                value={newCompany.ogrn}
-                onChange={(e) => handleInputChange('ogrn', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Введите ОГРН"
-              />
-            </div>
             <div className="flex items-end gap-3">
               <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="reestr"
-                  checked={newCompany.reestr}
-                  onChange={(e) => handleInputChange('reestr', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="reestr" className="ml-2 text-sm font-medium text-gray-700">
-                  В реестре
-                </label>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleAddCompany}
                   disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-2"
+                  className="px-4 py-2 bg-[#5D39F5] text-white rounded-[30px] hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -228,7 +199,7 @@ export default function Tables({ data }: { data: any[] | null }) {
                     setIsAdding(false);
                     setError(null);
                   }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  className="px-4 py-2 bg-white text-black rounded-[30px] hover:bg-gray-600"
                 >
                   Отмена
                 </button>
@@ -250,9 +221,6 @@ export default function Tables({ data }: { data: any[] | null }) {
                 ИНН
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ОГРН
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Аккредитация 
               </th>
             </tr>
@@ -270,9 +238,6 @@ export default function Tables({ data }: { data: any[] | null }) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {company.inn}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {company.ogrn}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
