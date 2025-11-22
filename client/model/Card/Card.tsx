@@ -4,7 +4,7 @@ import { RadialBar, RadialBarChart, PolarGrid, PolarRadiusAxis, Label } from "re
 
 // Простые компоненты карточек
 const Card = ({ children, className }: any) => (
-  <div className={`rounded-lg bg-white shadow-sm ${className}`}>
+  <div className={`rounded-[30px] bg-white shadow-sm w-[400px] ${className}`}>
     {children}
   </div>
 )
@@ -96,8 +96,8 @@ export function ChartRadialText() {
         </div>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
-          Выросло 5.2% за ноябрь <TrendingUp className="h-4 w-4 mt-[10px]" />
+        <div className="flex items-center gap-2 text-center leading-none font-medium">
+          Выросло 5.2% за ноябрь 
         </div>
       </CardFooter>
     </Card>

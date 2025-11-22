@@ -1,0 +1,12 @@
+2025-11-22 00:16:38 - __main__ - INFO - ✅ Конфигурация Mail.ru корректна: smtp.mail.ru:587
+2025-11-22 00:16:38 - __main__ - INFO - 🔄 Подключение к Mail.ru SMTP...
+2025-11-22 00:16:41 - __main__ - ERROR - ❌ Ошибка аутентификации Mail.ru: (535, '5.7.0 NEOBHODIM parol prilozheniya https://help.mail.ru/mail/security/protection/external / Application password is REQUIRED')
+2025-11-22 00:16:41 - __main__ - INFO - 💡 Проверьте правильность email и пароля от Mail.ru
+2025-11-22 00:17:47 - __main__ - INFO - ✅ Конфигурация Mail.ru корректна: smtp.mail.ru:587
+2025-11-22 00:17:47 - __main__ - INFO - 🔄 Подключение к Mail.ru SMTP...
+2025-11-22 00:17:50 - __main__ - ERROR - ❌ Ошибка аутентификации Mail.ru: (535, '5.7.0 NEOBHODIM parol prilozheniya https://help.mail.ru/mail/security/protection/external / Application password is REQUIRED')
+2025-11-22 00:17:50 - __main__ - INFO - 💡 Проверьте правильность email и пароля от Mail.ru
+2025-11-22 00:21:03 - __main__ - INFO - ✅ Конфигурация Mail.ru корректна: smtp.mail.ru:587
+2025-11-22 00:21:03 - __main__ - INFO - 🔄 Подключение к Mail.ru SMTP...
+2025-11-22 00:21:06 - __main__ - ERROR - ❌ Ошибка аутентификации Mail.ru: (535, '5.7.0 NEOBHODIM parol prilozheniya https://help.mail.ru/mail/security/protection/external / Application password is REQUIRED')
+2025-11-22 00:21:06 - __main__ - INFO - 💡 Проверьте правильность email и пароля от Mail.ru

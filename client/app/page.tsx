@@ -1,5 +1,7 @@
 "use client"
-import { ChartRadialText } from '@/model/Card/Card';
+import { ChartRadialText } from '@/model/Card/Card'
+import { ChartRadialText2 } from '@/model/Card/Card2';
+import { ChartRadialText3 } from '@/model/Card/Card3';
 import Header from '@/model/Header/Header';
 import React from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,9 +22,11 @@ const MainPage: React.FC = () => {
         <main className='mt-[30px]'>
           <div className='flex justify-between'>
             <ChartRadialText/>
+            <ChartRadialText2/>
+            <ChartRadialText3/>
           </div>
-          <div className='bg-white mt-[50px] shadow-sm rounded-lg p-[10px]'>
-            <div className='mb-[20px] text-[1.2rem] text-bold'>Компаний в реестре</div>
+          <div className='bg-white mt-[50px] shadow-sm rounded-[30px] p-[15px]'>
+            <div className='mb-[20px] text-[1.4rem] font-semibold'>Компаний в реестре</div>
             <div className="flex justify-center mb-4 w-full">
                <ChartAreaStacked/>
             </div>
