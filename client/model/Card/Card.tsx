@@ -1,15 +1,15 @@
 "use client"
 import * as React from "react"
-import {   ChartCard,
+import { 
+  ChartCard,
   ChartCardHeader,
   ChartCardFooter,
   ChartCardTitle,
   ChartCardDescription,
-  ChartCardContent, } from "@/componets/ui/chart-card"
-import { ChartContainer,  ChartTooltip,
-  PieChart,
-  Pie,
-  Label } from "@/componets/ui/charts-parts"
+  ChartCardContent, 
+} from "@/componets/ui/chart-card"
+import { ChartContainer, ChartTooltip } from "@/componets/ui/charts-parts"
+import { PieChart, Pie, Cell, Label } from "recharts"
 
 export interface PieDonutChartData {
   name: string
@@ -18,7 +18,7 @@ export interface PieDonutChartData {
 }
 
 interface PieDonutTextProps {
-  data?: PieDonutChartData[] // делаем опциональным
+  data?: PieDonutChartData[]
   title?: string
   description?: string
   centerText?: string
@@ -38,6 +38,23 @@ export const PieDonutText: React.FC<PieDonutTextProps> = ({
     return data?.reduce((sum, item) => sum + item.value, 0) || 0
   }, [data])
 
+  // Создаем данные для фона (полный круг)
+  const chartDataWithBackground = React.useMemo(() => {
+    const backgroundData = {
+      name: "background",
+      value: 100, // Полный круг
+      color: "#ECEDF0" // Серый цвет фона
+    }
+    
+    const mainData = data.map(item => ({
+      ...item,
+      // Нормализуем значения для отображения относительно 100%
+      value: (item.value / total) * 100
+    }))
+
+    return [backgroundData, ...mainData]
+  }, [data, total])
+
   const chartConfig = React.useMemo(() => {
     return data?.reduce((config, item) => {
       config[item.name] = {
@@ -47,6 +64,14 @@ export const PieDonutText: React.FC<PieDonutTextProps> = ({
       return config
     }, {} as any) || {}
   }, [data])
+
+  // Кастомная функция для тултипа
+  const customTooltipFormatter = React.useCallback((value: number, name: string) => {
+    if (name === "background") return [null, null] // Скрываем тултип для фона
+    // Восстанавливаем реальное значение из процентов
+    const realValue = (Number(value) * total) / 100
+    return [realValue.toFixed(0), name]
+  }, [total])
 
   // Если данных нет, показываем заглушку
   if (!data || data.length === 0) {
@@ -79,21 +104,48 @@ export const PieDonutText: React.FC<PieDonutTextProps> = ({
           style={{ height }}
         >
           <PieChart>
-            <ChartTooltip />
+            <ChartTooltip 
+              formatter={customTooltipFormatter}
+            />
+            
+            {/* Фон - полный серый круг */}
             <Pie
-              data={data}
+              data={chartDataWithBackground.filter(item => item.name === "background")}
               dataKey="value"
               nameKey="name"
               innerRadius="60%"
               outerRadius="80%"
               stroke="none"
+              isAnimationActive={false}
             >
-              {data.map((entry, index) => (
-                <cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color || `hsl(${index * 60}, 70%, 50%)`} 
-                />
-              ))}
+              {chartDataWithBackground
+                .filter(item => item.name === "background")
+                .map((entry, index) => (
+                  <Cell key={`background-${index}`} fill={entry.color} />
+                ))
+              }
+            </Pie>
+            
+            {/* Основные данные */}
+            <Pie
+              data={chartDataWithBackground.filter(item => item.name !== "background")}
+              dataKey="value"
+              nameKey="name"
+              innerRadius="60%"
+              outerRadius="80%"
+              stroke="none"
+              startAngle={90}
+              endAngle={-270}
+            >
+              {chartDataWithBackground
+                .filter(item => item.name !== "background")
+                .map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color || `hsl(${index * 60}, 70%, 50%)`} 
+                  />
+                ))
+              }
               
               <Label
                 content={({ viewBox }) => {
@@ -138,7 +190,5 @@ export const PieDonutText: React.FC<PieDonutTextProps> = ({
     </ChartCard>
   )
 }
-
-
 
 export default PieDonutText

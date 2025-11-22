@@ -37,7 +37,7 @@ export function ChartRadialText3() {
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Колличество сотрудников</CardTitle>
+        <CardTitle>Количество сотрудников</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <div className="mx-auto aspect-square max-h-[250px]">

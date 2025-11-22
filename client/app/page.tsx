@@ -1,5 +1,5 @@
 "use client"
-import { PieDonutText } from '@/model/Card/Card'
+
 import { ChartRadialText2 } from '@/model/Card/Card2';
 import { ChartRadialText3 } from '@/model/Card/Card3';
 import Header from '@/model/Header/Header';
@@ -29,12 +29,7 @@ const MainPage: React.FC = () => {
         <Header/>        
         <main className='mt-[30px]'>
           <div className='flex justify-between'>
-                <PieDonutText
-                    data={data} 
-                    title="Колличество компаний без задолжности"
-                    description="Ноябрь"
-                    
-                  />
+            
             <ChartRadialText2/>
             <ChartRadialText3/>
           </div>

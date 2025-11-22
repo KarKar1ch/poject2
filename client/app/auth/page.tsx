@@ -26,7 +26,7 @@ export default function AuthPage() {
       <div className="max-w-md w-full bg-white rounded-[50px] shadow-xl p-8">
         <div className="text-center mb-8 ">
           <div className='w-[60px] h-[70px] rounded-[20px] bg-[#5D39F50D] flex justify-center m-auto'><Image src="/login_24.svg" alt="door" width={30} height={30}/></div>  
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-[15px]">Вхойдите в систему</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-[15px]">Войдите в систему</h1>
           <p>Войдите, чтобы настроить обмен данными между системами</p>
         </div>
 

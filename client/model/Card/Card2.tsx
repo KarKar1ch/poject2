@@ -1,24 +1,24 @@
 "use client"
 import { TrendingUp } from "lucide-react"
-import { RadialBar, RadialBarChart, PolarGrid, PolarRadiusAxis, Label } from "recharts"
+import { RadialBar, RadialBarChart, PolarRadiusAxis, Label } from "recharts"
 
-// Простые компоненты карточек
+// --- Компоненты карточек ---
 const Card = ({ children, className }: any) => (
-  <div className={`rounded-[30px] bg-white shadow-sm w-[400px] ${className}`}>
+  <div className={`rounded-[30px] bg-white shadow-sm border border-slate-100 w-[350px] ${className}`}>
     {children}
   </div>
 )
 
 const CardHeader = ({ children, className }: any) => (
-  <div className={`p-6 pb-0 ${className}`}>{children}</div>
+  <div className={`p-6 pb-0 flex flex-col items-start ${className}`}>{children}</div>
 )
 
 const CardTitle = ({ children }: any) => (
-  <h3 className="text-2xl font-semibold">{children}</h3>
+  <h3 className="text-lg font-bold text-slate-900">{children}</h3>
 )
 
 const CardDescription = ({ children }: any) => (
-  <p className="text-sm text-gray-500 mt-2">{children}</p>
+  <p className="text-sm font-medium text-slate-400 mt-1">{children}</p>
 )
 
 const CardContent = ({ children, className }: any) => (
@@ -26,41 +26,51 @@ const CardContent = ({ children, className }: any) => (
 )
 
 const CardFooter = ({ children, className }: any) => (
-  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+  <div className={`p-6 pt-0 flex justify-center ${className}`}>{children}</div>
 )
 
-const chartData = [
-  { browser: "safari", visitors: 83, fill: "#5D39F5" },
-]
-
 export function ChartRadialText2() {
+  const total = 274;
+  const filledPercentage = 75; // Процент заполнения
+  
+  // Данные для графика - сначала фон (полный круг), потом основная часть
+  const chartData = [
+    { 
+      name: "background", 
+      value: 100, // Полный круг - 100%
+      fill: "#ECEDF0" // Серый цвет для фона
+    },
+    { 
+      name: "main", 
+      value: filledPercentage, // Процент заполнения
+      fill: "#5D39F5" // Фиолетовый цвет
+    },
+  ]
+
   return (
     <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Колличество вакансий</CardTitle>
+      <CardHeader>
+        <CardTitle>Компании без задолженностей</CardTitle>
+        <CardDescription>Ноябрь</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <div className="mx-auto aspect-square max-h-[250px]">
+        <div className="mx-auto aspect-square max-h-[250px] flex justify-center">
           <RadialBarChart
-            width={260}
-            height={280}
+            width={250}
+            height={250}
             data={chartData}
-            startAngle={0}
-            endAngle={250}
-            innerRadius={100}
+            innerRadius={90}
             outerRadius={120}
+            startAngle={0}
+            endAngle={360}
           >
-            <PolarGrid
-              gridType="circle"
-              radialLines={true}
-              stroke="none"
-            />
+            {/* RadialBar для отображения всех данных */}
             <RadialBar 
-              dataKey="visitors" 
-              background 
-              cornerRadius={50}
-              fill="#3b82f6"
+              dataKey="value"
+              cornerRadius={20}
+              // Убираем background, так как создаем фон через данные
             />
+            
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
               <Label
                 content={({ viewBox }: any) => {
@@ -75,14 +85,14 @@ export function ChartRadialText2() {
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
+                          className="fill-slate-900 text-5xl font-bold"
                         >
-                          {chartData[0].visitors.toLocaleString()}
+                          {total}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
+                          y={(viewBox.cy || 0) + 30}
+                          className="fill-slate-400 text-lg font-medium"
                         >
                           Всего
                         </tspan>
@@ -96,8 +106,9 @@ export function ChartRadialText2() {
         </div>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
-          Выросло 1.2% за ноябрь 
+        <div className="flex items-center gap-2 leading-none font-bold text-slate-900 text-base">
+          <TrendingUp className="h-4 w-4" />
+          Выросло на 1.53%
         </div>
       </CardFooter>
     </Card>
